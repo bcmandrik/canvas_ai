@@ -21,17 +21,25 @@ matthew_api = "5499~VxDt62xrv2F8zGT7wG9c6zzmJuYNZTDG2FTJaGRhED7nm6CHCDtAh4W7tkxm
 
 
 
-def make_request(endpoint, params=None):
-    """Helper function to make API requests with better error handling"""
+def make_request(endpoint: str, params: Optional[Dict[str, Any]] = None) -> Optional[requests.Response]:
+    """Helper function to make API requests with better error handling
+    
+    Args:
+        endpoint (str): The API endpoint to call.
+        params (Optional[Dict[str, Any]]): Query parameters for the API request.
+
+    Returns:
+        Optional[requests.Response]: The response object if the request is successful, otherwise None.
+    """
     try:
-        headers = {
+        headers: Dict[str, str] = {
             "Authorization": f"Bearer {ACCESS_TOKEN}",
             "Accept": "application/json"
         }
-        url = f"{BASE_URL}/{endpoint}"
+        url: str = f"{BASE_URL}/{endpoint}"
         logger.debug(f"Making request to: {url}")
         
-        response = requests.get(url, headers=headers, params=params)
+        response: requests.Response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()  # Raise an exception for bad status codes
         
         return response
@@ -39,12 +47,16 @@ def make_request(endpoint, params=None):
         logger.error(f"API request failed: {str(e)}")
         return None
 
-def get_user_profile():
-    """Get authenticated user's profile with validation"""
-    response = make_request("users/self")
+def get_user_profile() -> Optional[Dict[str, Any]]:
+    """Get authenticated user's profile with validation
+    
+    Returns:
+        Optional[Dict[str, Any]]: The user's profile as a dictionary if successful, otherwise None.
+    """
+    response: Optional[requests.Response] = make_request("users/self")
     if response and response.status_code == 200:
         try:
-            profile = response.json()
+            profile: Dict[str, Any] = response.json()
             # Validate required fields
             if not isinstance(profile, dict):
                 logger.error("Invalid profile data structure")
@@ -68,17 +80,26 @@ def get_courses_data() -> Optional[List[Dict[str, Any]]]:
         return response.json()  # Can be a list of course dicts
     return None
 
-def get_assignments(course_id, page=1):
-    """Get assignments data with pagination"""
-    params = {
+def get_assignments(course_id: int, page: int) -> Dict[str, Any]:
+    """Get assignments data with pagination
+    
+    Args:
+        course_id (int): The ID of the course to fetch assignments from.
+        page (int): The page number for pagination (default is 1).
+    
+    Returns:
+        Dict[str, Any]: A dictionary containing assignments, current page, and total pages.
+    """
+    page = page or 1
+    params: Dict[str, Any] = {
         'page': page,
         'per_page': 10,
         'include[]': ['submission']
     }
     
-    response = make_request(f"courses/{course_id}/assignments", params=params)
+    response: Optional[requests.Response] = make_request(f"courses/{course_id}/assignments", params=params)
     if response and response.status_code == 200:
-        total_pages = int(response.headers.get('Link', '').count('rel="next"')) + page
+        total_pages: int = int(response.headers.get('Link', '').count('rel="next"')) + page
         return {
             'assignments': response.json(),
             'current_page': page,
@@ -93,19 +114,26 @@ def get_modules(course_id: int) -> Optional[List[Dict[str, Any]]]:
         return response.json()
     return []
 
-def get_announcements_data(course_id):
-    """Get announcements data"""
-    params = {
+def get_announcements_data(course_id: int) -> Optional[List[Dict[str, Any]]]:
+    """Get announcements data
+    
+    Args:
+        course_id (int): The ID of the course to fetch announcements from.
+    
+    Returns:
+        Optional[List[Dict[str, Any]]]: A list of announcements as dictionaries if successful, otherwise None.
+    """
+    params: Dict[str, Any] = {
         "only_announcements": True,
         "order_by": "posted_at",
         "per_page": 10
     }
-    response = make_request(f"courses/{course_id}/discussion_topics", params=params)
+    response: Optional[requests.Response] = make_request(f"courses/{course_id}/discussion_topics", params=params)
     if response and response.status_code == 200:
         return response.json()
-    return []
+    return None
 
-def create_calendar_event(title, description, start_date, end_date, location=None):
+def create_calendar_event(title, description, start_date, end_date, location):
     """Create a new calendar event"""
     # Get current user to set the correct context
     user = get_user_profile()
@@ -150,51 +178,74 @@ def create_calendar_event(title, description, start_date, end_date, location=Non
         logger.error(f"Request failed: {str(e)}")
         return None
 
-def get_course_files(course_id):
-    """Get all files from a course"""
-    params = {
+def get_course_files(course_id: int) -> Optional[List[Dict[str, Any]]]:
+    """Get all files from a course
+    
+    Args:
+        course_id (int): The ID of the course to fetch files from.
+    
+    Returns:
+        Optional[List[Dict[str, Any]]]: A list of file dictionaries if successful, otherwise None.
+    """
+    params: Dict[str, Any] = {
         'per_page': 100,  # Maximum files per request
         'sort': 'created_at',
         'order': 'desc'
     }
     
-    response = make_request(f"courses/{course_id}/files", params=params)
+    response: Optional[requests.Response] = make_request(f"courses/{course_id}/files", params=params)
     if response and response.status_code == 200:
         return response.json()
-    return []
+    return None
 
-def get_module_items(course_id, module_id):
-    """Get all items within a module"""
-    response = make_request(f"courses/{course_id}/modules/{module_id}/items")
+def get_module_items(course_id: int, module_id: int) -> Optional[List[Dict[str, Any]]]:
+    """Get all items within a module
+    
+    Args:
+        course_id (int): The ID of the course.
+        module_id (int): The ID of the module.
+    
+    Returns:
+        Optional[List[Dict[str, Any]]]: A list of module items as dictionaries if successful, otherwise None.
+    """
+    response: Optional[requests.Response] = make_request(f"courses/{course_id}/modules/{module_id}/items")
     if response and response.status_code == 200:
         return response.json()
-    return []
+    return None
 
-def scrape_course_data(course_id):
-    """Scrape all relevant data from a course"""
-    course_data = {
+def scrape_course_data(course_id: int) -> Dict[str, List[Dict[str, Any]]]:
+    """Scrape all relevant data from a course
+    
+    Args:
+        course_id (int): The ID of the course to scrape data from.
+    
+    Returns:
+        Dict[str, List[Dict[str, Any]]]: A dictionary containing modules, files, and assignments data.
+    """
+    course_data: Dict[str, List[Dict[str, Any]]] = {
         'modules': [],
         'files': [],
         'assignments': []
     }
     
     # Get all modules and their items
-    modules = get_modules(course_id)
-    for module in modules:
-        module_data = {
-            'id': module['id'],
-            'name': module['name'],
-            'items': get_module_items(course_id, module['id'])
-        }
-        course_data['modules'].append(module_data)
+    modules: Optional[List[Dict[str, Any]]] = get_modules(course_id)
+    if modules:
+        for module in modules:
+            module_data: Dict[str, Any] = {
+                'id': module['id'],
+                'name': module['name'],
+                'items': get_module_items(course_id, module['id']) or []
+            }
+            course_data['modules'].append(module_data)
     
     # Get all files
-    course_data['files'] = get_course_files(course_id)
+    course_data['files'] = get_course_files(course_id) or []
     
     # Get all assignments (not just the first page)
-    page = 1
+    page: int = 1
     while True:
-        assignments_data = get_assignments(course_id, page)
+        assignments_data: Dict[str, Any] = get_assignments(course_id, page)
         course_data['assignments'].extend(assignments_data['assignments'])
         
         if page >= assignments_data['total_pages']:
@@ -203,34 +254,51 @@ def scrape_course_data(course_id):
     
     return course_data
 
-def get_file_download_url(course_id, file_id):
-    """Get the download URL for a specific file"""
-    response = make_request(f"courses/{course_id}/files/{file_id}")
+def get_file_download_url(course_id: int, file_id: int) -> Optional[str]:
+    """Get the download URL for a specific file
+    
+    Args:
+        course_id (int): The ID of the course.
+        file_id (int): The ID of the file.
+    
+    Returns:
+        Optional[str]: The download URL as a string if successful, otherwise None.
+    """
+    response: Optional[requests.Response] = make_request(f"courses/{course_id}/files/{file_id}")
     if response and response.status_code == 200:
-        file_data = response.json()
+        file_data: Dict[str, Any] = response.json()
         return file_data.get('url')
     return None
 
-def download_course_file(course_id, file_id, filename):
-    """Download a specific file from the course"""
-    download_url = get_file_download_url(course_id, file_id)
+def download_course_file(course_id: int, file_id: int, filename: str) -> bool:
+    """Download a specific file from the course
+    
+    Args:
+        course_id (int): The ID of the course.
+        file_id (int): The ID of the file to download.
+        filename (str): The name to save the downloaded file as.
+    
+    Returns:
+        bool: True if the file was successfully downloaded, False otherwise.
+    """
+    download_url: Optional[str] = get_file_download_url(course_id, file_id)
     if not download_url:
         logger.error(f"Could not get download URL for file {file_id}")
         return False
         
     try:
-        response = requests.get(
+        response: requests.Response = requests.get(
             download_url,
             headers={"Authorization": f"Bearer {ACCESS_TOKEN}"}
         )
         response.raise_for_status()
         
         # Create downloads directory if it doesn't exist
-        downloads_dir = os.path.join(os.path.dirname(__file__), 'downloads')
+        downloads_dir: str = os.path.join(os.path.dirname(__file__), 'downloads')
         os.makedirs(downloads_dir, exist_ok=True)
         
         # Save the file
-        file_path = os.path.join(downloads_dir, filename)
+        file_path: str = os.path.join(downloads_dir, filename)
         with open(file_path, 'wb') as f:
             f.write(response.content)
             
@@ -248,13 +316,24 @@ GEMINI_API = "AIzaSyAHbphbMZGE0CEzNH-41egmZLk9HLWDzyU"
 client = genai.Client(api_key=GEMINI_API)
 
 config = types.GenerateContentConfig(
-    tools=[get_courses_data]
-)  # Pass the function itself
+    tools=[
+        get_courses_data,
+        get_user_profile,
+        get_assignments,
+        get_modules,
+        get_announcements_data,
+        get_course_files,
+        get_module_items,
+        scrape_course_data,
+        get_file_download_url,
+        download_course_file
+    ]
+)  # Pass the functions themselves
 
 
 response = client.models.generate_content(
     model="gemini-2.0-flash",
-    contents="What are the courses I am enrolled in?, provide anything that is useful",
+    contents="Can you get me any assignments at all from any course at all, if you need a course id try and get one, it's okay just give me anything I'm testing your functionality",
     config=config,
 )
 

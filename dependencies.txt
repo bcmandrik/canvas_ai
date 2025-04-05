@@ -1,0 +1,1 @@
+Gemini API Library :  pip install -q -U google-genai

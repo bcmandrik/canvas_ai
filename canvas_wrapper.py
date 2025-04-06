@@ -340,9 +340,3 @@ response = client.models.generate_content(
 print(response.text)
 
 
-# if response.candidates[0].content.parts[0].function_call:
-#     function_call = response.candidates[0].content.parts[0].function_call
-#     print(f"Function to call: {function_call.name}")
-#     print(f"Arguments: {function_call.args}")
-# else:
-#     print("No function call found in the response.")

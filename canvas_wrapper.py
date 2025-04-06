@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 # Replace with your Canvas instance URL and access token
 BASE_URL = "https://vcccd.instructure.com/api/v1"
-ACCESS_TOKEN = "5499~ka4kBzAAPBUWWE6QFcaUVQkJnDfuMnGQCX8KTW2fuxhTkmvNxx99vhUQ8Weu3V4E"
+ACCESS_TOKEN = "5499~VxDt62xrv2F8zGT7wG9c6zzmJuYNZTDG2FTJaGRhED7nm6CHCDtAh4W7tkxm7NDw"
 
 matthew_api = "5499~VxDt62xrv2F8zGT7wG9c6zzmJuYNZTDG2FTJaGRhED7nm6CHCDtAh4W7tkxm7NDw"
 
@@ -309,34 +309,5 @@ def download_course_file(course_id: int, file_id: int, filename: str) -> bool:
         logger.error(f"Error downloading file {filename}: {str(e)}")
         return False
 
-
-GEMINI_API = "AIzaSyAHbphbMZGE0CEzNH-41egmZLk9HLWDzyU"
-
-# Example usage with the Gemini client
-client = genai.Client(api_key=GEMINI_API)
-
-config = types.GenerateContentConfig(
-    tools=[
-        get_courses_data,
-        get_user_profile,
-        get_assignments,
-        get_modules,
-        get_announcements_data,
-        get_course_files,
-        get_module_items,
-        scrape_course_data,
-        get_file_download_url,
-        download_course_file
-    ]
-)  # Pass the functions themselves
-
-
-response = client.models.generate_content(
-    model="gemini-2.0-flash",
-    contents="Can you get me any assignments at all from any course at all, if you need a course id try and get one, it's okay just give me anything I'm testing your functionality",
-    config=config,
-)
-
-print(response.text)
 
 

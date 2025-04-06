@@ -2,14 +2,28 @@ from flask import Flask, request, jsonify, render_template
 from canvas_wrapper import *
 from google import genai
 from google.genai import types
+from time import strftime, localtime
 
 app = Flask(__name__)
 
 # Initialize Gemini client
 client = genai.Client(api_key="AIzaSyAHbphbMZGE0CEzNH-41egmZLk9HLWDzyU")
 
-# Conversation context (global for simplicity)
-conversation = []
+# Get the current date for the system prompt
+today = strftime("%Y-%m-%d", localtime())
+
+# Conversation context (global for simplicity) with system prompt
+conversation = [
+    types.Content(
+        role="model",
+        parts=[types.Part(text=(
+            "You are a helpful academic assistant who helps students interact with their Canvas dashboard. "
+            "You answer questions about assignments, classes, due dates, modules, and announcements. "
+            "Be friendly and informative. Ask follow-up questions if needed and always prioritize relevance."
+            f"today is {today}"
+        ))]
+    )
+]
 
 # Configure tools for Gemini
 config = types.GenerateContentConfig(
@@ -42,7 +56,7 @@ def chat():
     try:
         # Generate response from Gemini
         response = client.models.generate_content(
-            model="models/gemini-1.5-pro",
+            model="models/gemini-2.0-flash-lite",  # Use a valid model name
             contents=conversation,
             config=config
         )
@@ -57,3 +71,4 @@ def chat():
 
 if __name__ == "__main__":
     app.run(debug=True)
+

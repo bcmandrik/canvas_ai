@@ -5,7 +5,6 @@ This is a Flask web application that integrates with Canvas LMS and Google Gemin
 
 ## 🔧 Features
 
-- OAuth2 login via Canvas LMS
 - Fetches user and course data using the Canvas API
 - Uses Gemini (Google GenAI) to enhance responses
 - Simple, clean Flask interface
@@ -16,3 +15,4 @@ Make sure you install the required Python packages:
 
 ```bash
 pip install -r dependencies.txt
+

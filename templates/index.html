@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas AI Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f9f9f9;
+        }
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .chat-window {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+        }
+        .chat-message {
+            margin-bottom: 12px;
+        }
+        .chat-message.user {
+            text-align: right;
+        }
+        .chat-message .message {
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 16px;
+            max-width: 70%;
+        }
+        .chat-message.user .message {
+            background: #007bff;
+            color: #fff;
+        }
+        .chat-message.model .message {
+            background: #f1f1f1;
+            color: #333;
+        }
+        .chat-input {
+            display: flex;
+            padding: 8px;
+            border-top: 1px solid #ddd;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 8px;
+        }
+        .chat-input button {
+            padding: 8px 16px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .chat-input button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-window" id="chat-window"></div>
+        <div class="chat-input">
+            <input type="text" id="user-input" placeholder="Type your message..." />
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const userInput = document.getElementById("user-input");
+            const chatWindow = document.getElementById("chat-window");
+
+            if (!userInput.value.trim()) return;
+
+            // Display user message
+            const userMessage = document.createElement("div");
+            userMessage.className = "chat-message user";
+            userMessage.innerHTML = `<div class="message">${userInput.value}</div>`;
+            chatWindow.appendChild(userMessage);
+
+            // Scroll to bottom
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            // Send message to backend
+            const response = await fetch("/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: userInput.value })
+            });
+
+            userInput.value = ""; // Clear input
+
+            if (response.ok) {
+                const data = await response.json();
+                const botMessage = document.createElement("div");
+                botMessage.className = "chat-message model";
+                botMessage.innerHTML = `<div class="message">${data.reply}</div>`;
+                chatWindow.appendChild(botMessage);
+
+                // Scroll to bottom
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            } else {
+                const errorMessage = document.createElement("div");
+                errorMessage.className = "chat-message model";
+                errorMessage.innerHTML = `<div class="message">Error: Unable to get a response.</div>`;
+                chatWindow.appendChild(errorMessage);
+            }
+        }
+    </script>
+</body>
+</html>
